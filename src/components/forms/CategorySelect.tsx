@@ -1,22 +1,24 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useCategories } from '../../hooks/useCategories';
 
 interface CategorySelectProps {
+  type: 'activity' | 'task';
   value: string;
   onChange: (value: string) => void;
 }
 
-const categories = [
-  'Meeting',
-  'Client Call',
-  'Development',
-  'Design',
-  'Research',
-  'Documentation',
-  'Other'
-];
+const CategorySelect: React.FC<CategorySelectProps> = ({ type, value, onChange }) => {
+  const { categories, loading } = useCategories(type);
 
-const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange }) => {
+  if (loading) {
+    return (
+      <div className="w-full p-3 bg-gray-100 rounded-md animate-pulse">
+        <div className="h-6 bg-gray-200 rounded"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <select
@@ -24,10 +26,10 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange }) => {
         onChange={(e) => onChange(e.target.value)}
         className="w-full p-3 bg-gray-100 rounded-md appearance-none text-gray-700"
       >
-        <option value="" disabled>Category</option>
+        <option value="">Select Category</option>
         {categories.map((category) => (
-          <option key={category} value={category}>
-            {category}
+          <option key={category.id} value={category.name}>
+            {category.name}
           </option>
         ))}
       </select>

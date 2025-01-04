@@ -34,13 +34,7 @@ const NewActivity = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createActivity(
-      {
-        ...formData,
-        images: [] // This will be replaced with uploaded image URLs
-      },
-      imageFiles
-    );
+    await createActivity(formData, imageFiles);
   };
 
   return (
@@ -62,6 +56,7 @@ const NewActivity = () => {
         />
 
         <CategorySelect
+          type="activity"
           value={formData.category}
           onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
         />

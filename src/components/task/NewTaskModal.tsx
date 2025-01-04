@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import CategorySelect from '../forms/CategorySelect';
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -11,16 +12,6 @@ interface NewTaskModalProps {
     priority: 'low' | 'medium' | 'high';
   }) => Promise<{ success: boolean; error: string | null }>;
 }
-
-const CATEGORIES = [
-  'Meeting',
-  'Client Call',
-  'Development',
-  'Design',
-  'Research',
-  'Documentation',
-  'Other'
-];
 
 const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -40,7 +31,6 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSubmit }
     const result = await onSubmit(formData);
     
     if (result.success) {
-      // Reset form
       setFormData({
         title: '',
         category: '',
@@ -95,17 +85,11 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSubmit }
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-            <select
+            <CategorySelect
+              type="task"
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full p-2 border rounded-lg"
-              required
-            >
-              <option value="">Select Category</option>
-              {CATEGORIES.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+              onChange={(value) => setFormData({ ...formData, category: value })}
+            />
           </div>
 
           <div>

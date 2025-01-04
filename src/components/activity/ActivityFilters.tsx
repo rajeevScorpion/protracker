@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Calendar, X } from 'lucide-react';
 import DateRangePicker from './DateRangePicker';
-
-const CATEGORIES = [
-  'Meeting',
-  'Client Call',
-  'Development',
-  'Design',
-  'Research',
-  'Documentation',
-  'Other'
-];
+import { useCategories } from '../../hooks/useCategories';
 
 interface ActivityFiltersProps {
   selectedCategory: string;
@@ -28,6 +19,7 @@ const ActivityFilters: React.FC<ActivityFiltersProps> = ({
   onPerPageChange
 }) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const { categories, loading } = useCategories('activity');
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -52,10 +44,13 @@ const ActivityFilters: React.FC<ActivityFiltersProps> = ({
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full appearance-none pl-4 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={loading}
           >
             <option value="">All Categories</option>
-            {CATEGORIES.map(category => (
-              <option key={category} value={category}>{category}</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
             ))}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
