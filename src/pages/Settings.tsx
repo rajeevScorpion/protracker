@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuthState } from '../hooks/useAuthState';
 import CategorySettings from '../components/settings/CategorySettings';
 import AccountSettings from '../components/settings/AccountSettings';
+import CollapsibleSection from '../components/settings/CollapsibleSection';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useCategories } from '../hooks/useCategories';
 
@@ -40,11 +41,8 @@ const Settings = () => {
       )}
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 border-b">
-            <h2 className="font-medium">Define Categories</h2>
-          </div>
-          <div className="p-4 space-y-6">
+        <CollapsibleSection title="Categories" defaultOpen={true}>
+          <div className="space-y-6">
             <CategorySettings
               title="Activity Categories"
               categories={activityCategories}
@@ -63,9 +61,11 @@ const Settings = () => {
               />
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
-        <AccountSettings />
+        <CollapsibleSection title="Account Information" defaultOpen={true}>
+          <AccountSettings />
+        </CollapsibleSection>
       </div>
     </div>
   );
