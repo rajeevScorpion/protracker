@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X, Edit2, Tags } from 'lucide-react';
+import ConfirmationModal from '../modals/ConfirmationModal';
 
 interface Category {
   id: string;
@@ -25,6 +26,7 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   const handleAdd = () => {
     if (!newCategory.trim()) return;
@@ -38,6 +40,17 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
     onUpdate(id, editingName.trim());
     setEditingId(null);
     setEditingName('');
+  };
+
+  const handleDeleteClick = (category: Category) => {
+    setCategoryToDelete(category);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      onDelete(categoryToDelete.id);
+      setCategoryToDelete(null);
+    }
   };
 
   return (
@@ -134,7 +147,7 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => onDelete(category.id)}
+                    onClick={() => handleDeleteClick(category)}
                     className="p-2 text-red-600 hover:text-red-700"
                   >
                     <X className="h-4 w-4" />
@@ -145,6 +158,14 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
           </div>
         ))}
       </div>
+
+      <ConfirmationModal
+        isOpen={categoryToDelete !== null}
+        onClose={() => setCategoryToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 };

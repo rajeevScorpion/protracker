@@ -2,10 +2,12 @@ import {
   collection, 
   doc,
   setDoc,
+  getDoc,
   getDocs,
   query,
   where,
   deleteDoc,
+  updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -15,45 +17,59 @@ interface Category {
   name: string;
 }
 
+interface UserProfile {
+  name: string;
+  designation: string;
+  company: string;
+  mobile: string;
+  email: string;
+}
+
 export const settingsService = {
-  async saveCategories(userId: string, type: 'activity' | 'task', categories: Category[]) {
+  async getUserProfile(userId: string) {
     try {
-      console.log('Starting to save categories:', { userId, type, categories });
-
-      // First, delete existing categories
-      const categoriesRef = collection(db, 'categories');
-      const q = query(
-        categoriesRef,
-        where('userId', '==', userId),
-        where('type', '==', type)
-      );
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
       
-      const existingDocs = await getDocs(q);
-      console.log('Found existing categories:', existingDocs.size);
-
-      // Delete existing categories one by one
-      for (const doc of existingDocs.docs) {
-        await deleteDoc(doc.ref);
+      if (userDoc.exists()) {
+        return userDoc.data() as UserProfile;
       }
-      console.log('Deleted existing categories');
-
-      // Add new categories one by one
-      for (const category of categories) {
-        const newDocRef = doc(categoriesRef); // Create a new document reference
-        await setDoc(newDocRef, {  // Use setDoc instead of newDocRef.set
-          userId,
-          type,
-          name: category.name,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        console.log('Added category:', category.name);
-      }
-      console.log('Added all new categories');
-
-      return true;
+      return null;
     } catch (error) {
-      console.error('Error saving categories:', error);
+      console.error('Error getting user profile:', error);
+      throw error;
+    }
+  },
+
+  async updateUserProfile(userId: string, profileData: Partial<UserProfile>) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        ...profileData,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+  },
+
+  async initializeUserProfile(userId: string, email: string) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const profile = {
+        name: '',
+        designation: '',
+        company: '',
+        mobile: '',
+        email,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(userRef, profile);
+      return profile;
+    } catch (error) {
+      console.error('Error initializing user profile:', error);
       throw error;
     }
   },
@@ -74,6 +90,54 @@ export const settingsService = {
       }));
     } catch (error) {
       console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+
+  async addCategory(userId: string, type: 'activity' | 'task', name: string) {
+    try {
+      const categoriesRef = collection(db, 'categories');
+      const newDocRef = doc(categoriesRef);
+      
+      const categoryData = {
+        userId,
+        type,
+        name,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      await setDoc(newDocRef, categoryData);
+      
+      return {
+        id: newDocRef.id,
+        name
+      };
+    } catch (error) {
+      console.error('Error adding category:', error);
+      throw error;
+    }
+  },
+
+  async updateCategory(userId: string, type: 'activity' | 'task', categoryId: string, name: string) {
+    try {
+      const categoryRef = doc(db, 'categories', categoryId);
+      await updateDoc(categoryRef, {
+        name,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
+
+  async deleteCategory(userId: string, type: 'activity' | 'task', categoryId: string) {
+    try {
+      const categoryRef = doc(db, 'categories', categoryId);
+      await deleteDoc(categoryRef);
+    } catch (error) {
+      console.error('Error deleting category:', error);
       throw error;
     }
   }
