@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Activity } from 'lucide-react';
-import { signIn } from '../lib/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -15,12 +16,12 @@ const Login = () => {
     setIsLoading(true);
     setError('');
 
-    const { user, error: signInError } = await signIn(email, password);
-    
-    if (user) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       navigate('/', { replace: true });
-    } else {
-      setError(signInError || 'Failed to sign in');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Invalid email or password');
       setIsLoading(false);
     }
   };

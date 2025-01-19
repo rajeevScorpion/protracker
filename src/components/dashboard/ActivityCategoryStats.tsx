@@ -38,7 +38,7 @@ const ActivityCategoryStats: React.FC<ActivityCategoryStatsProps> = ({
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-1 text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full hover:bg-gray-100"
           >
-            {PERIODS.find(p => p.value === period)?.label || 'This Month'}
+            {PERIODS.find(p => p.value === period)?.label}
             <ChevronDown className="h-4 w-4" />
           </button>
 

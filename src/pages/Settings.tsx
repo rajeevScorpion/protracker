@@ -5,10 +5,12 @@ import AccountSettings from '../components/settings/AccountSettings';
 import CollapsibleSection from '../components/settings/CollapsibleSection';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useCategories } from '../hooks/useCategories';
+import { createDummyActivities } from '../utils/createDummyActivities';
 
 const Settings = () => {
   const { user } = useAuthState();
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingDummy, setIsCreatingDummy] = useState(false);
 
   const {
     categories: activityCategories,
@@ -26,21 +28,35 @@ const Settings = () => {
     deleteCategory: deleteTaskCategory
   } = useCategories('task');
 
+  const handleCreateDummyData = async () => {
+    if (!user) return;
+    try {
+      setIsCreatingDummy(true);
+      await createDummyActivities(user.uid);
+      alert('Dummy activities created successfully!');
+    } catch (error) {
+      console.error('Error creating dummy data:', error);
+      alert('Failed to create dummy activities');
+    } finally {
+      setIsCreatingDummy(false);
+    }
+  };
+
   if (!user || loadingActivityCategories || loadingTaskCategories) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="max-w-3xl mx-auto py-6">
-      <h1 className="text-2xl font-semibold mb-6">Settings</h1>
+      <h1 className=" px-4 text-2xl font-semibold mb-6">Settings</h1>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
+        <div className=" px-4 mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
           {error}
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="px-4 space-y-6">
         <CollapsibleSection title="Activity Categories" defaultOpen={true}>
           <CategorySettings
             title="Activity Categories"
@@ -63,6 +79,23 @@ const Settings = () => {
 
         <CollapsibleSection title="Account Information" defaultOpen={true}>
           <AccountSettings />
+        </CollapsibleSection>
+
+        {/* Development Tools Section */}
+        <CollapsibleSection title="Development Tools" defaultOpen={false}>
+          <div className=" p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Test Data</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Create dummy activities for testing. This will add 15 sample activities spread across the last year.
+            </p>
+            <button
+              onClick={handleCreateDummyData}
+              disabled={isCreatingDummy}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-500 transition-colors"
+            >
+              {isCreatingDummy ? 'Creating...' : 'Create Dummy Activities'}
+            </button>
+          </div>
         </CollapsibleSection>
       </div>
     </div>

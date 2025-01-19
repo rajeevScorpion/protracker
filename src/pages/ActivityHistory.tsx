@@ -32,12 +32,12 @@ const ActivityHistory = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-6">
-      <div className="px-1 mb-6">
+      <div className="px-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Activity History</h1>
         <p className="text-gray-600">Select the cards to see more details</p>
       </div>
 
-      <div className="px-1">
+      <div className="px-4">
         <ActivityFilters
           selectedCategory={selectedCategory}
           onSearch={setSearchQuery}
@@ -48,14 +48,14 @@ const ActivityHistory = () => {
       </div>
 
       {error && (
-        <div className="px-1 mb-4">
+        <div className="px-4 mb-4">
           <div className="p-4 bg-red-50 text-red-700 rounded-lg">
             {error}
           </div>
         </div>
       )}
 
-      <div className="px-1">
+      <div className="px-4">
         {activities.map((activity) => (
           <ActivityCard
             key={activity.id}

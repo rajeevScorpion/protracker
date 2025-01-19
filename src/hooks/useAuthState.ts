@@ -7,7 +7,9 @@ export const useAuthState = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Setting up auth state listener'); // Debug log
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      console.log('Auth state changed:', user ? 'logged in' : 'logged out'); // Debug log
       setUser(user);
       setLoading(false);
     });

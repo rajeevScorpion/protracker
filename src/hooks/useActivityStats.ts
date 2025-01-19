@@ -2,16 +2,27 @@ import { useState, useEffect } from 'react';
 import { useAuthState } from './useAuthState';
 import { activityService } from '../services/activity.service';
 import { useCategories } from './useCategories';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, 
-         startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths } from 'date-fns';
+import { 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfQuarter, 
+  endOfQuarter, 
+  startOfYear, 
+  endOfYear, 
+  subMonths,
+  isWithinInterval
+} from 'date-fns';
 
 export const useActivityStats = () => {
   const { user } = useAuthState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryStats, setCategoryStats] = useState<any[]>([]);
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('week');
   const { categories, loading: categoriesLoading } = useCategories('activity');
+  const [activities, setActivities] = useState<any[]>([]);
 
   const getDateRange = (period: string) => {
     const now = new Date();
@@ -49,49 +60,75 @@ export const useActivityStats = () => {
     }
   };
 
+  // Fetch all activities once
   useEffect(() => {
-    const loadStats = async () => {
-      if (!user || categoriesLoading) return;
+    const fetchActivities = async () => {
+      if (!user) return;
+      try {
+        const fetchedActivities = await activityService.getActivities(user.uid);
+        setActivities(fetchedActivities);
+      } catch (err) {
+        console.error('Error fetching activities:', err);
+        setError('Failed to fetch activities');
+      }
+    };
+
+    fetchActivities();
+  }, [user]);
+
+  // Calculate stats based on period
+  useEffect(() => {
+    const calculateStats = () => {
+      if (!activities.length || !categories.length) return;
 
       try {
         setLoading(true);
-        setError(null);
-
         const dateRange = getDateRange(period);
-        const activities = await activityService.getActivities(user.uid);
 
+        // Filter activities within the selected period
+        const filteredActivities = activities.filter(activity => 
+          isWithinInterval(new Date(activity.date), {
+            start: dateRange.start,
+            end: dateRange.end
+          })
+        );
+
+        // Calculate hours per category
         const categoryHours = new Map<string, number>();
         let totalHours = 0;
 
-        activities.forEach(activity => {
+        filteredActivities.forEach(activity => {
           if (!activity.category) return;
           
-          const duration = activity.duration / 60; // Convert minutes to hours
+          // Calculate duration in hours from the activity's duration (which is in minutes)
+          const durationHours = activity.duration / 60;
+          
           categoryHours.set(
             activity.category,
-            (categoryHours.get(activity.category) || 0) + duration
+            (categoryHours.get(activity.category) || 0) + durationHours
           );
-          totalHours += duration;
+          totalHours += durationHours;
         });
 
+        // Create stats for all categories
         const stats = categories.map(category => ({
           name: category.name,
-          hours: Math.round((categoryHours.get(category.name) || 0) * 10) / 10,
+          hours: Math.round((categoryHours.get(category.name) || 0) * 10) / 10, // Round to 1 decimal
           percentage: totalHours ? 
             Math.round(((categoryHours.get(category.name) || 0) / totalHours) * 100) : 0
         }));
 
         setCategoryStats(stats);
       } catch (err) {
-        console.error('Error loading activity stats:', err);
-        setError('Failed to load activity statistics');
+        console.error('Error calculating stats:', err);
+        setError('Failed to calculate statistics');
       } finally {
         setLoading(false);
       }
     };
 
-    loadStats();
-  }, [user, categories, categoriesLoading, period]);
+    calculateStats();
+  }, [activities, categories, period]);
 
   return { 
     categoryStats, 

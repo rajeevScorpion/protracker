@@ -84,7 +84,8 @@ export const activityService = {
           endTime: data.endTime.toDate(),
           date: data.date.toDate(),
           duration: data.duration || 0,
-          images: data.images || []
+          images: data.images || [],
+          details: data.details || ''
         };
       });
 
@@ -94,6 +95,14 @@ export const activityService = {
           activity.title.toLowerCase().includes(searchLower) ||
           (activity.details && activity.details.toLowerCase().includes(searchLower))
         );
+      }
+
+      if (filters.dateRange?.start && filters.dateRange?.end) {
+        activities = activities.filter(activity => {
+          const activityDate = new Date(activity.date);
+          return activityDate >= filters.dateRange!.start! && 
+                 activityDate <= filters.dateRange!.end!;
+        });
       }
 
       return activities;

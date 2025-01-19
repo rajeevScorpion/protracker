@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import MobileHeader from './MobileHeader';
 import { 
   PlusCircle, 
@@ -25,10 +25,12 @@ const navItems = [
 
 const MobileLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -97,7 +99,7 @@ const MobileLayout = () => {
         </div>
       </>
 
-      <main className="pt-14 px-4 pb-20">
+      <main className="pt-14 pb-20">
         <Outlet />
       </main>
     </div>
