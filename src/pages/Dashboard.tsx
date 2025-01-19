@@ -44,20 +44,16 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch tasks
         const tasks = await taskService.getTasks(user.uid);
         const completedTasks = tasks.filter(task => task.status === 'completed');
         
-        // Sort tasks by due date and get upcoming ones
         const pendingTasks = tasks
           .filter(task => task.status === 'pending')
           .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
           .slice(0, 3);
 
-        // Fetch recent activities
         const activities = await activityService.getActivities(user.uid, { limit: 3 });
 
-        // Calculate weekly activities
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         const weeklyActivitiesCount = activities.filter(
@@ -90,57 +86,49 @@ const Dashboard = () => {
   if (error || statsError) {
     return (
       <div className="max-w-3xl mx-auto py-6">
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg">
-          {error || statsError}
+        <div className="px-4">
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+            {error || statsError}
+          </div>
         </div>
       </div>
     );
   }
 
-  const formatActivityTime = (activity: any) => {
-    try {
-      const activityTime = new Date(activity.date);
-      activityTime.setHours(
-        activity.startTime.getHours(),
-        activity.startTime.getMinutes()
-      );
-      return activityTime;
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return new Date();
-    }
-  };
-
   return (
     <div className="max-w-3xl mx-auto py-6">
-      <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
-      
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <StatsCard
-          icon={Activity}
-          title="Activities"
-          value={stats.weeklyActivities}
-          subtitle="This week"
-          iconColor="text-blue-600"
-        />
-        
-        <StatsCard
-          icon={CheckCircle2}
-          title="Tasks"
-          value={`${stats.completedTasks}/${stats.totalTasks}`}
-          subtitle="Completed"
-          iconColor="text-green-600"
-        />
+      <div className="px-4 mb-6">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
+      
+      <div className="px-4">
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <StatsCard
+            icon={Activity}
+            title="Activities"
+            value={stats.weeklyActivities}
+            subtitle="This week"
+            iconColor="text-blue-600"
+          />
+          
+          <StatsCard
+            icon={CheckCircle2}
+            title="Tasks"
+            value={`${stats.completedTasks}/${stats.totalTasks}`}
+            subtitle="Completed"
+            iconColor="text-green-600"
+          />
+        </div>
 
-      <div className="space-y-4">
-        <UpcomingTasks tasks={upcomingTasks} />
-        <RecentActivities activities={recentActivities} />
-        <ActivityCategoryStats 
-          stats={categoryStats || []}
-          period={period}
-          onPeriodChange={setPeriod}
-        />
+        <div className="space-y-4">
+          <UpcomingTasks tasks={upcomingTasks} />
+          <RecentActivities activities={recentActivities} />
+          <ActivityCategoryStats 
+            stats={categoryStats || []}
+            period={period}
+            onPeriodChange={setPeriod}
+          />
+        </div>
       </div>
     </div>
   );

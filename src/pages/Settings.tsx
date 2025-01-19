@@ -48,11 +48,15 @@ const Settings = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-6">
-      <h1 className=" px-4 text-2xl font-semibold mb-6">Settings</h1>
+      <div className="px-4 mb-6">
+        <h1 className="text-2xl font-semibold">Settings</h1>
+      </div>
 
       {error && (
-        <div className=" px-4 mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
+        <div className="px-4 mb-4">
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+            {error}
+          </div>
         </div>
       )}
 
@@ -81,9 +85,8 @@ const Settings = () => {
           <AccountSettings />
         </CollapsibleSection>
 
-        {/* Development Tools Section */}
         <CollapsibleSection title="Development Tools" defaultOpen={false}>
-          <div className=" p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Test Data</h3>
             <p className="text-sm text-gray-600 mb-4">
               Create dummy activities for testing. This will add 15 sample activities spread across the last year.
