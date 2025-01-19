@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Clock, Trash2, Download, Image } from 'lucide-react';
+import { Clock, Trash2, Download, Image, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ActivityCardProps {
@@ -40,12 +40,11 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
     }
   };
 
-  // Ensure images is always an array
   const images = Array.isArray(activity.images) ? activity.images : [];
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-sm border mb-4 cursor-pointer"
+      className="bg-white rounded-lg shadow-sm border mb-4 cursor-pointer transition-all duration-200 hover:shadow-md"
       onClick={() => setIsExpanded(!isExpanded)}
     >
       <div className="p-4">
@@ -92,42 +91,52 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
             >
               <Trash2 className="h-5 w-5" />
             </button>
+            {(activity.details || images.length > 0) && (
+              <div className="text-gray-400">
+                {isExpanded ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
+              </div>
+            )}
           </div>
         </div>
-
-        {activity.details && (
-          <p className="mt-2 text-sm text-gray-600">{activity.details}</p>
-        )}
       </div>
       
-      {isExpanded && images.length > 0 && (
-        <div className="px-4 pb-4 border-t pt-4">
-          <div className="grid grid-cols-3 gap-4">
-            {images.map((image, index) => (
-              <div key={index} className="relative group aspect-square">
-                <div className={cn(
-                  "w-full h-full rounded-lg overflow-hidden bg-gray-100",
-                  !loadedImages.includes(image) && "animate-pulse"
-                )}>
-                  <img
-                    src={image}
-                    alt={`Activity ${index + 1}`}
-                    className={cn(
-                      "w-full h-full object-cover transition-opacity duration-200",
-                      loadedImages.includes(image) ? "opacity-100" : "opacity-0"
-                    )}
-                    onLoad={() => handleImageLoad(image)}
-                  />
+      {isExpanded && (activity.details || images.length > 0) && (
+        <div className="px-4 pb-4 pt-2 border-t">
+          {activity.details && (
+            <p className="text-gray-600 text-sm mb-4">{activity.details}</p>
+          )}
+          {images.length > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {images.map((image, index) => (
+                <div key={index} className="relative group aspect-square">
+                  <div className={cn(
+                    "w-full h-full rounded-lg overflow-hidden bg-gray-100",
+                    !loadedImages.includes(image) && "animate-pulse"
+                  )}>
+                    <img
+                      src={image}
+                      alt={`Activity ${index + 1}`}
+                      className={cn(
+                        "w-full h-full object-cover transition-opacity duration-200",
+                        loadedImages.includes(image) ? "opacity-100" : "opacity-0"
+                      )}
+                      onLoad={() => handleImageLoad(image)}
+                    />
+                  </div>
+                  <button
+                    onClick={(e) => handleDownload(image, e)}
+                    className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white"
+                  >
+                    <Download className="h-4 w-4 text-gray-700" />
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => handleDownload(image, e)}
-                  className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white"
-                >
-                  <Download className="h-4 w-4 text-gray-700" />
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
