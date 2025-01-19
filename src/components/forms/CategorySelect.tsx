@@ -13,7 +13,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ type, value, onChange }
 
   if (loading) {
     return (
-      <div className="w-full p-3 bg-gray-100 rounded-md animate-pulse">
+      <div className="w-full p-3 bg-gray-100 rounded-lg animate-pulse">
         <div className="h-6 bg-gray-200 rounded"></div>
       </div>
     );
@@ -24,7 +24,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ type, value, onChange }
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 bg-gray-100 rounded-md appearance-none text-gray-700"
+        className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
       >
         <option value="">Select Category</option>
         {categories.map((category) => (

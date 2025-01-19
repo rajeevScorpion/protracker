@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { Activity, CheckCircle2 } from 'lucide-react';
 import { useAuthState } from '../hooks/useAuthState';
 import { activityService } from '../services/activity.service';
 import { taskService } from '../services/task.service';
-import { format, formatDistanceToNow } from 'date-fns';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import StatsCard from '../components/dashboard/StatsCard';
+import UpcomingTasks from '../components/dashboard/UpcomingTasks';
+import RecentActivities from '../components/dashboard/RecentActivities';
 
 interface DashboardStats {
   weeklyActivities: number;
@@ -85,89 +87,31 @@ const Dashboard = () => {
     );
   }
 
-  const formatActivityTime = (activity: any) => {
-    try {
-      // Use the combined date and start time for the activity timestamp
-      const activityTime = new Date(activity.date);
-      activityTime.setHours(
-        activity.startTime.getHours(),
-        activity.startTime.getMinutes()
-      );
-      return formatDistanceToNow(activityTime, { addSuffix: true });
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return 'Unknown time';
-    }
-  };
-
   return (
     <div className="max-w-3xl mx-auto py-6">
       <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
       
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center gap-3 mb-2">
-            <Activity className="h-5 w-5 text-blue-600" />
-            <h3 className="font-medium">Activities</h3>
-          </div>
-          <p className="text-2xl font-semibold">{stats.weeklyActivities}</p>
-          <p className="text-sm text-gray-500">This week</p>
-        </div>
+        <StatsCard
+          icon={Activity}
+          title="Activities"
+          value={stats.weeklyActivities}
+          subtitle="This week"
+          iconColor="text-blue-600"
+        />
         
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center gap-3 mb-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <h3 className="font-medium">Tasks</h3>
-          </div>
-          <p className="text-2xl font-semibold">
-            {stats.completedTasks}/{stats.totalTasks}
-          </p>
-          <p className="text-sm text-gray-500">Completed</p>
-        </div>
+        <StatsCard
+          icon={CheckCircle2}
+          title="Tasks"
+          value={`${stats.completedTasks}/${stats.totalTasks}`}
+          subtitle="Completed"
+          iconColor="text-green-600"
+        />
       </div>
 
       <div className="space-y-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="font-medium mb-4">Upcoming Tasks</h3>
-          <div className="space-y-4">
-            {upcomingTasks.length > 0 ? (
-              upcomingTasks.map((task) => (
-                <div key={task.id} className="flex items-center gap-3 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-gray-900">{task.title}</p>
-                    <p className="text-gray-500">
-                      Due {format(new Date(task.dueDate), 'MMM d, yyyy')}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No upcoming tasks</p>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="font-medium mb-4">Recent Activities</h3>
-          <div className="space-y-4">
-            {recentActivities.length > 0 ? (
-              recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-3 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-gray-900">{activity.title}</p>
-                    <p className="text-gray-500">
-                      {formatActivityTime(activity)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No recent activities</p>
-            )}
-          </div>
-        </div>
+        <UpcomingTasks tasks={upcomingTasks} />
+        <RecentActivities activities={recentActivities} />
       </div>
     </div>
   );
