@@ -34,17 +34,21 @@ const NewActivity = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createActivity(formData, imageFiles);
+    try {
+      await createActivity(formData, imageFiles);
+    } catch (err) {
+      console.error('Form submission error:', err);
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto py-6">
-      <div className="px-1 mb-6">
+      <div className="px-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">New Activity</h1>
         <p className="text-gray-600">Add details about your activity</p>
       </div>
 
-      <div className="px-1">
+      <div className="px-4">
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
             {error}
@@ -59,6 +63,7 @@ const NewActivity = () => {
             value={formData.title}
             onChange={handleChange}
             className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            required
           />
 
           <CategorySelect
@@ -73,6 +78,7 @@ const NewActivity = () => {
             value={formData.date}
             onChange={handleChange}
             className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            required
           />
 
           <div className="grid grid-cols-2 gap-4">
@@ -82,6 +88,7 @@ const NewActivity = () => {
               value={formData.startTime}
               onChange={handleChange}
               className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+              required
             />
             <input
               type="time"
@@ -89,6 +96,7 @@ const NewActivity = () => {
               value={formData.endTime}
               onChange={handleChange}
               className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+              required
             />
           </div>
 

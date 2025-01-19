@@ -7,6 +7,8 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import StatsCard from '../components/dashboard/StatsCard';
 import UpcomingTasks from '../components/dashboard/UpcomingTasks';
 import RecentActivities from '../components/dashboard/RecentActivities';
+import ActivityCategoryStats from '../components/dashboard/ActivityCategoryStats';
+import { useActivityStats } from '../hooks/useActivityStats';
 
 interface DashboardStats {
   weeklyActivities: number;
@@ -25,6 +27,14 @@ const Dashboard = () => {
   });
   const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  
+  const { 
+    categoryStats, 
+    loading: statsLoading, 
+    error: statsError,
+    period,
+    setPeriod
+  } = useActivityStats();
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -62,8 +72,8 @@ const Dashboard = () => {
         setUpcomingTasks(pendingTasks);
         setRecentActivities(activities);
 
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
@@ -73,19 +83,33 @@ const Dashboard = () => {
     loadDashboardData();
   }, [user]);
 
-  if (loading) {
+  if (loading || statsLoading) {
     return <LoadingSpinner />;
   }
 
-  if (error) {
+  if (error || statsError) {
     return (
       <div className="max-w-3xl mx-auto py-6">
         <div className="bg-red-50 text-red-600 p-4 rounded-lg">
-          {error}
+          {error || statsError}
         </div>
       </div>
     );
   }
+
+  const formatActivityTime = (activity: any) => {
+    try {
+      const activityTime = new Date(activity.date);
+      activityTime.setHours(
+        activity.startTime.getHours(),
+        activity.startTime.getMinutes()
+      );
+      return activityTime;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return new Date();
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-6">
@@ -112,6 +136,11 @@ const Dashboard = () => {
       <div className="space-y-4">
         <UpcomingTasks tasks={upcomingTasks} />
         <RecentActivities activities={recentActivities} />
+        <ActivityCategoryStats 
+          stats={categoryStats || []}
+          period={period}
+          onPeriodChange={setPeriod}
+        />
       </div>
     </div>
   );

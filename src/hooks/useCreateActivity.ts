@@ -8,31 +8,32 @@ export const useCreateActivity = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const createActivity = async (formData: {
-    title: string;
-    category: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    details: string;
-  }, imageFiles: File[]) => {
+  const createActivity = async (formData: any, imageFiles: File[]) => {
     if (!auth.currentUser) {
       setError('User not authenticated');
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
     try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!formData.title || !formData.category || !formData.date || 
+          !formData.startTime || !formData.endTime) {
+        throw new Error('Please fill in all required fields');
+      }
+
       await activityService.createActivity(
         auth.currentUser.uid,
         formData,
         imageFiles
       );
-      navigate('/dashboard');
+
+      navigate('/history');
     } catch (err) {
+      console.error('Error creating activity:', err);
       setError(err instanceof Error ? err.message : 'Failed to create activity');
+      throw err;
     } finally {
       setIsLoading(false);
     }
