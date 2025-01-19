@@ -31,27 +31,31 @@ const ActivityHistory = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4">
-      <div className="mb-6">
+    <div className="max-w-3xl mx-auto py-6">
+      <div className="px-1 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Activity History</h1>
         <p className="text-gray-600">Select the cards to see more details</p>
       </div>
 
-      <ActivityFilters
-        selectedCategory={selectedCategory}
-        onSearch={setSearchQuery}
-        onCategoryChange={setSelectedCategory}
-        onDateRangeChange={setDateRange}
-        onPerPageChange={setPerPage}
-      />
+      <div className="px-1">
+        <ActivityFilters
+          selectedCategory={selectedCategory}
+          onSearch={setSearchQuery}
+          onCategoryChange={setSelectedCategory}
+          onDateRangeChange={setDateRange}
+          onPerPageChange={setPerPage}
+        />
+      </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
-          {error}
+        <div className="px-1 mb-4">
+          <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+            {error}
+          </div>
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="px-1">
         {activities.map((activity) => (
           <ActivityCard
             key={activity.id}
@@ -59,13 +63,13 @@ const ActivityHistory = () => {
             onDelete={handleDelete}
           />
         ))}
-      </div>
 
-      {activities.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No activities found</p>
-        </div>
-      )}
+        {activities.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No activities found</p>
+          </div>
+        )}
+      </div>
 
       <ConfirmationModal
         isOpen={deleteActivityId !== null}

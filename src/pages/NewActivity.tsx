@@ -38,82 +38,84 @@ const NewActivity = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="mb-6">
+    <div className="max-w-3xl mx-auto py-6">
+      <div className="px-1 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">New Activity</h1>
         <p className="text-gray-600">Add details about your activity</p>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
+      <div className="px-1">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <input
-          type="text"
-          name="title"
-          placeholder="Enter a new Activity"
-          value={formData.title}
-          onChange={handleChange}
-          className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-        />
-
-        <CategorySelect
-          type="activity"
-          value={formData.category}
-          onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-        />
-
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
-          className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-        />
-
-        <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <input
-            type="time"
-            name="startTime"
-            value={formData.startTime}
+            type="text"
+            name="title"
+            placeholder="Enter a new Activity"
+            value={formData.title}
             onChange={handleChange}
             className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
+
+          <CategorySelect
+            type="activity"
+            value={formData.category}
+            onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          />
+
           <input
-            type="time"
-            name="endTime"
-            value={formData.endTime}
+            type="date"
+            name="date"
+            value={formData.date}
             onChange={handleChange}
             className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
-        </div>
 
-        <textarea
-          name="details"
-          value={formData.details}
-          onChange={handleChange}
-          placeholder="Details"
-          rows={4}
-          className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
-        />
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="time"
+              name="startTime"
+              value={formData.startTime}
+              onChange={handleChange}
+              className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            />
+            <input
+              type="time"
+              name="endTime"
+              value={formData.endTime}
+              onChange={handleChange}
+              className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+            />
+          </div>
 
-        <ImageUpload
-          images={previewUrls}
-          onImageAdd={handleImageAdd}
-          onImageRemove={handleImageRemove}
-        />
+          <textarea
+            name="details"
+            value={formData.details}
+            onChange={handleChange}
+            placeholder="Details"
+            rows={4}
+            className="w-full p-3 bg-white rounded-lg border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
+          />
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 shadow-sm hover:shadow-md transition-shadow"
-        >
-          {isLoading ? 'Submitting...' : 'Submit'}
-        </button>
-      </form>
+          <ImageUpload
+            images={previewUrls}
+            onImageAdd={handleImageAdd}
+            onImageRemove={handleImageRemove}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 shadow-sm hover:shadow-md transition-shadow"
+          >
+            {isLoading ? 'Submitting...' : 'Submit'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
