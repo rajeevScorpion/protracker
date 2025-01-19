@@ -41,26 +41,24 @@ const Settings = () => {
       )}
 
       <div className="space-y-6">
-        <CollapsibleSection title="Categories" defaultOpen={true}>
-          <div className="space-y-6">
-            <CategorySettings
-              title="Activity Categories"
-              categories={activityCategories}
-              onAdd={addActivityCategory}
-              onUpdate={updateActivityCategory}
-              onDelete={deleteActivityCategory}
-            />
-            
-            <div className="border-t pt-6">
-              <CategorySettings
-                title="Task Categories"
-                categories={taskCategories}
-                onAdd={addTaskCategory}
-                onUpdate={updateTaskCategory}
-                onDelete={deleteTaskCategory}
-              />
-            </div>
-          </div>
+        <CollapsibleSection title="Activity Categories" defaultOpen={true}>
+          <CategorySettings
+            title="Activity Categories"
+            categories={activityCategories}
+            onAdd={addActivityCategory}
+            onUpdate={updateActivityCategory}
+            onDelete={deleteActivityCategory}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Task Categories" defaultOpen={true}>
+          <CategorySettings
+            title="Task Categories"
+            categories={taskCategories}
+            onAdd={addTaskCategory}
+            onUpdate={updateTaskCategory}
+            onDelete={deleteTaskCategory}
+          />
         </CollapsibleSection>
 
         <CollapsibleSection title="Account Information" defaultOpen={true}>

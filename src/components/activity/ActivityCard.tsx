@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Clock, Trash2, Download } from 'lucide-react';
+import { Clock, Trash2, Download, Image } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface ActivityCardProps {
   activity: {
@@ -39,6 +40,9 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
     }
   };
 
+  // Ensure images is always an array
+  const images = Array.isArray(activity.images) ? activity.images : [];
+
   return (
     <div 
       className="bg-white rounded-lg shadow-sm border mb-4 cursor-pointer"
@@ -73,16 +77,10 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
           </div>
           
           <div className="flex items-center gap-2">
-            {activity.images.length > 0 && (
-              <div className="flex -space-x-1">
-                {activity.images.slice(0, 3).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-6 w-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center"
-                  >
-                    <span className="text-xs">{index + 1}</span>
-                  </div>
-                ))}
+            {images.length > 0 && (
+              <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                <Image className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">{images.length}</span>
               </div>
             )}
             <button
@@ -96,41 +94,40 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
             </button>
           </div>
         </div>
+
+        {activity.details && (
+          <p className="mt-2 text-sm text-gray-600">{activity.details}</p>
+        )}
       </div>
       
-      {isExpanded && (
-        <div className="px-4 pb-4 pt-2 border-t">
-          {activity.details && (
-            <p className="text-gray-600 text-sm mb-4">{activity.details}</p>
-          )}
-          {activity.images.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {activity.images.map((image, index) => (
-                <div key={index} className="relative group">
-                  <div className={`aspect-square rounded-lg bg-gray-100 ${
-                    loadedImages.includes(image) ? '' : 'animate-pulse'
-                  }`}>
-                    <img
-                      src={image}
-                      alt={`Activity image ${index + 1}`}
-                      className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${
-                        loadedImages.includes(image) ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      loading="lazy"
-                      onLoad={() => handleImageLoad(image)}
-                    />
-                  </div>
-                  <button
-                    onClick={(e) => handleDownload(image, e)}
-                    className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white"
-                    title="Download image"
-                  >
-                    <Download className="h-4 w-4 text-gray-700" />
-                  </button>
+      {isExpanded && images.length > 0 && (
+        <div className="px-4 pb-4 border-t pt-4">
+          <div className="grid grid-cols-3 gap-4">
+            {images.map((image, index) => (
+              <div key={index} className="relative group aspect-square">
+                <div className={cn(
+                  "w-full h-full rounded-lg overflow-hidden bg-gray-100",
+                  !loadedImages.includes(image) && "animate-pulse"
+                )}>
+                  <img
+                    src={image}
+                    alt={`Activity ${index + 1}`}
+                    className={cn(
+                      "w-full h-full object-cover transition-opacity duration-200",
+                      loadedImages.includes(image) ? "opacity-100" : "opacity-0"
+                    )}
+                    onLoad={() => handleImageLoad(image)}
+                  />
                 </div>
-              ))}
-            </div>
-          )}
+                <button
+                  onClick={(e) => handleDownload(image, e)}
+                  className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white"
+                >
+                  <Download className="h-4 w-4 text-gray-700" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
