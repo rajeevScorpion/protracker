@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -28,6 +28,19 @@ const ActivityCategoryStats: React.FC<ActivityCategoryStatsProps> = ({
   onPeriodChange 
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState<CategoryStat[]>([]);
+
+  // Initialize with 0% width and animate to actual percentage
+  useEffect(() => {
+    setAnimatedStats(stats.map(stat => ({ ...stat, percentage: 0 })));
+    
+    // Trigger animation after a brief delay
+    const timeout = setTimeout(() => {
+      setAnimatedStats(stats);
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, [stats]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -71,8 +84,8 @@ const ActivityCategoryStats: React.FC<ActivityCategoryStatsProps> = ({
       </div>
 
       <div className="space-y-4">
-        {stats.length > 0 ? (
-          stats.map((stat) => (
+        {animatedStats.length > 0 ? (
+          animatedStats.map((stat) => (
             <div key={stat.name} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-700">{stat.name}</span>
@@ -80,7 +93,7 @@ const ActivityCategoryStats: React.FC<ActivityCategoryStatsProps> = ({
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${stat.percentage}%` }}
                 />
               </div>

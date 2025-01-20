@@ -3,30 +3,29 @@ import {
   doc,
   setDoc,
   getDoc,
+  addDoc,
   getDocs,
   query,
   where,
   deleteDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-interface Category {
-  id: string;
+export interface UserProfile {
   name: string;
-}
-
-interface UserProfile {
-  name: string;
+  email: string;
   designation: string;
   company: string;
   mobile: string;
-  email: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export const settingsService = {
-  async getUserProfile(userId: string) {
+  async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -41,6 +40,22 @@ export const settingsService = {
     }
   },
 
+  async initializeUserProfile(userId: string, profileData: Omit<UserProfile, 'createdAt' | 'updatedAt'>) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const profile = {
+        ...profileData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(userRef, profile);
+      return profile;
+    } catch (error) {
+      console.error('Error initializing user profile:', error);
+      throw error;
+    }
+  },
+
   async updateUserProfile(userId: string, profileData: Partial<UserProfile>) {
     try {
       const userRef = doc(db, 'users', userId);
@@ -50,26 +65,6 @@ export const settingsService = {
       });
     } catch (error) {
       console.error('Error updating user profile:', error);
-      throw error;
-    }
-  },
-
-  async initializeUserProfile(userId: string, email: string) {
-    try {
-      const userRef = doc(db, 'users', userId);
-      const profile = {
-        name: '',
-        designation: '',
-        company: '',
-        mobile: '',
-        email,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
-      await setDoc(userRef, profile);
-      return profile;
-    } catch (error) {
-      console.error('Error initializing user profile:', error);
       throw error;
     }
   },
@@ -97,8 +92,6 @@ export const settingsService = {
   async addCategory(userId: string, type: 'activity' | 'task', name: string) {
     try {
       const categoriesRef = collection(db, 'categories');
-      const newDocRef = doc(categoriesRef);
-      
       const categoryData = {
         userId,
         type,
@@ -107,10 +100,9 @@ export const settingsService = {
         updatedAt: serverTimestamp()
       };
       
-      await setDoc(newDocRef, categoryData);
-      
+      const docRef = await addDoc(categoriesRef, categoryData);
       return {
-        id: newDocRef.id,
+        id: docRef.id,
         name
       };
     } catch (error) {

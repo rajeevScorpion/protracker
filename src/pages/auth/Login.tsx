@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Activity } from 'lucide-react';
-import { signIn, signInWithGoogle } from '../lib/auth';
-import GoogleSignInButton from '../components/auth/GoogleSignInButton';
+import { signIn, signInWithGoogle } from '../../lib/auth';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
 
 const Login = () => {
   const navigate = useNavigate();

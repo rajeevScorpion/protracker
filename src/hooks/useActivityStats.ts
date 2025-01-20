@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthState } from './useAuthState';
-import { activityService } from '../services/activity.service';
-import { useCategories } from './useCategories';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { 
   startOfWeek, 
   endOfWeek, 
@@ -11,8 +11,7 @@ import {
   endOfQuarter, 
   startOfYear, 
   endOfYear, 
-  subMonths,
-  isWithinInterval
+  subMonths
 } from 'date-fns';
 
 export const useActivityStats = () => {
@@ -21,88 +20,63 @@ export const useActivityStats = () => {
   const [error, setError] = useState<string | null>(null);
   const [categoryStats, setCategoryStats] = useState<any[]>([]);
   const [period, setPeriod] = useState('week');
-  const { categories, loading: categoriesLoading } = useCategories('activity');
-  const [activities, setActivities] = useState<any[]>([]);
 
-  const getDateRange = (period: string) => {
-    const now = new Date();
-    switch (period) {
-      case 'week':
-        return {
-          start: startOfWeek(now, { weekStartsOn: 1 }),
-          end: endOfWeek(now, { weekStartsOn: 1 })
-        };
-      case 'month':
-        return {
-          start: startOfMonth(now),
-          end: endOfMonth(now)
-        };
-      case 'quarter':
-        return {
-          start: startOfQuarter(now),
-          end: endOfQuarter(now)
-        };
-      case 'halfYear':
-        return {
-          start: startOfMonth(subMonths(now, 6)),
-          end: endOfMonth(now)
-        };
-      case 'year':
-        return {
-          start: startOfYear(now),
-          end: endOfYear(now)
-        };
-      default:
-        return {
-          start: startOfMonth(now),
-          end: endOfMonth(now)
-        };
-    }
-  };
-
-  // Fetch all activities once
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchStats = async () => {
       if (!user) return;
-      try {
-        const fetchedActivities = await activityService.getActivities(user.uid);
-        setActivities(fetchedActivities);
-      } catch (err) {
-        console.error('Error fetching activities:', err);
-        setError('Failed to fetch activities');
-      }
-    };
-
-    fetchActivities();
-  }, [user]);
-
-  // Calculate stats based on period
-  useEffect(() => {
-    const calculateStats = () => {
-      if (!activities.length || !categories.length) return;
 
       try {
         setLoading(true);
-        const dateRange = getDateRange(period);
+        const now = new Date();
+        let startDate: Date;
+        let endDate: Date;
 
-        // Filter activities within the selected period
-        const filteredActivities = activities.filter(activity => 
-          isWithinInterval(new Date(activity.date), {
-            start: dateRange.start,
-            end: dateRange.end
-          })
+        switch (period) {
+          case 'week':
+            startDate = startOfWeek(now, { weekStartsOn: 1 });
+            endDate = endOfWeek(now, { weekStartsOn: 1 });
+            break;
+          case 'month':
+            startDate = startOfMonth(now);
+            endDate = endOfMonth(now);
+            break;
+          case 'quarter':
+            startDate = startOfQuarter(now);
+            endDate = endOfQuarter(now);
+            break;
+          case 'halfYear':
+            startDate = startOfMonth(subMonths(now, 6));
+            endDate = endOfMonth(now);
+            break;
+          case 'year':
+            startDate = startOfYear(now);
+            endDate = endOfYear(now);
+            break;
+          default:
+            startDate = startOfMonth(now);
+            endDate = endOfMonth(now);
+        }
+
+        const activitiesRef = collection(db, `users/${user.uid}/activities`);
+        const q = query(
+          activitiesRef,
+          where('date', '>=', Timestamp.fromDate(startDate)),
+          where('date', '<=', Timestamp.fromDate(endDate))
         );
 
-        // Calculate hours per category
+        const snapshot = await getDocs(q);
+        const activities = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id
+        }));
+
+        // Calculate stats by category
         const categoryHours = new Map<string, number>();
         let totalHours = 0;
 
-        filteredActivities.forEach(activity => {
+        activities.forEach(activity => {
           if (!activity.category) return;
-          
-          // Calculate duration in hours from the activity's duration (which is in minutes)
-          const durationHours = activity.duration / 60;
-          
+          const durationHours = (activity.duration || 0) / 60;
           categoryHours.set(
             activity.category,
             (categoryHours.get(activity.category) || 0) + durationHours
@@ -110,29 +84,28 @@ export const useActivityStats = () => {
           totalHours += durationHours;
         });
 
-        // Create stats for all categories
-        const stats = categories.map(category => ({
-          name: category.name,
-          hours: Math.round((categoryHours.get(category.name) || 0) * 10) / 10, // Round to 1 decimal
-          percentage: totalHours ? 
-            Math.round(((categoryHours.get(category.name) || 0) / totalHours) * 100) : 0
+        const stats = Array.from(categoryHours.entries()).map(([name, hours]) => ({
+          name,
+          hours: Math.round(hours * 10) / 10,
+          percentage: totalHours ? Math.round((hours / totalHours) * 100) : 0
         }));
 
         setCategoryStats(stats);
+        setError(null);
       } catch (err) {
-        console.error('Error calculating stats:', err);
-        setError('Failed to calculate statistics');
+        console.error('Error fetching activity stats:', err);
+        setError('Failed to load activity statistics');
       } finally {
         setLoading(false);
       }
     };
 
-    calculateStats();
-  }, [activities, categories, period]);
+    fetchStats();
+  }, [user, period]);
 
   return { 
     categoryStats, 
-    loading: loading || categoriesLoading, 
+    loading, 
     error,
     period,
     setPeriod

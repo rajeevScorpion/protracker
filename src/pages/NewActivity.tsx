@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ImageUpload from '../components/forms/ImageUpload';
 import CategorySelect from '../components/forms/CategorySelect';
-import { useCreateActivity } from '../hooks/useCreateActivity';
+import { activityService } from '../services/activity.service';
+import { auth } from '../lib/firebase';
 
 const NewActivity = () => {
-  const { createActivity, isLoading, error } = useCreateActivity();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -34,10 +38,18 @@ const NewActivity = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth.currentUser) return;
+
     try {
-      await createActivity(formData, imageFiles);
+      setIsLoading(true);
+      setError(null);
+      await activityService.createActivity(auth.currentUser.uid, formData, imageFiles);
+      navigate('/history');
     } catch (err) {
       console.error('Form submission error:', err);
+      setError('Failed to create activity');
+    } finally {
+      setIsLoading(false);
     }
   };
 

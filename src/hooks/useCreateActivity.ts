@@ -29,7 +29,7 @@ export const useCreateActivity = () => {
         imageFiles
       );
 
-      navigate('/history');
+      return true;
     } catch (err) {
       console.error('Error creating activity:', err);
       setError(err instanceof Error ? err.message : 'Failed to create activity');

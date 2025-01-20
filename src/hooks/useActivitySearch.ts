@@ -16,7 +16,6 @@ export const useActivitySearch = (user: User | null) => {
   });
   const [perPage, setPerPage] = useState(10);
 
-  // Load all activities once
   useEffect(() => {
     if (user) {
       loadActivities();
@@ -24,49 +23,40 @@ export const useActivitySearch = (user: User | null) => {
   }, [user]);
 
   const loadActivities = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const fetchedActivities = await activityService.getActivities(user!.uid, {
-        category: selectedCategory,
-        dateRange,
-        limit: perPage
-      });
+      const fetchedActivities = await activityService.getActivities(user.uid);
       setAllActivities(fetchedActivities);
+      setError(null);
     } catch (err) {
+      console.error('Failed to load activities:', err);
       setError('Failed to load activities');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter activities based on search query and other filters
   const filteredActivities = useMemo(() => {
     let filtered = [...allActivities];
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(activity => 
         activity.title.toLowerCase().includes(query) ||
-        activity.details?.toLowerCase().includes(query) ||
-        activity.category.toLowerCase().includes(query)
+        activity.details?.toLowerCase().includes(query)
       );
     }
 
-    // Apply category filter
     if (selectedCategory) {
-      filtered = filtered.filter(activity => 
-        activity.category === selectedCategory
-      );
+      filtered = filtered.filter(activity => activity.category === selectedCategory);
     }
 
-    // Apply date range filter
     if (dateRange.start && dateRange.end) {
       filtered = filtered.filter(activity => {
         const activityDate = new Date(activity.date);
-        return activityDate >= dateRange.start! && 
-               activityDate <= dateRange.end!;
+        return activityDate >= dateRange.start! && activityDate <= dateRange.end!;
       });
     }
 
@@ -78,15 +68,15 @@ export const useActivitySearch = (user: User | null) => {
   };
 
   const confirmDelete = async () => {
-    if (!deleteActivityId) return;
+    if (!deleteActivityId || !user) return;
     
     try {
-      await activityService.deleteActivity(user!.uid, deleteActivityId);
-      setAllActivities(allActivities.filter(activity => activity.id !== deleteActivityId));
+      await activityService.deleteActivity(user.uid, deleteActivityId);
+      setAllActivities(prev => prev.filter(activity => activity.id !== deleteActivityId));
+      setDeleteActivityId(null);
     } catch (err) {
       console.error('Failed to delete activity:', err);
-    } finally {
-      setDeleteActivityId(null);
+      setError('Failed to delete activity');
     }
   };
 
@@ -105,6 +95,7 @@ export const useActivitySearch = (user: User | null) => {
     setPerPage,
     handleDelete,
     confirmDelete,
-    setDeleteActivityId
+    setDeleteActivityId,
+    refresh: loadActivities
   };
 };

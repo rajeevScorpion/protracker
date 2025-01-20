@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from './hooks/useAuthState';
 import MobileLayout from './components/layout/MobileLayout';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import TaskList from './pages/TaskList';
 import NewActivity from './pages/NewActivity';
 import ActivityHistory from './pages/ActivityHistory';
@@ -12,7 +14,6 @@ import Settings from './pages/Settings';
 function App() {
   const { user, loading } = useAuthState();
 
-  // Show loading spinner while checking auth state
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
@@ -24,15 +25,24 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth Routes */}
         <Route 
           path="/login" 
           element={user ? <Navigate to="/" replace /> : <Login />} 
         />
+        <Route 
+          path="/register" 
+          element={user ? <Navigate to="/" replace /> : <Register />} 
+        />
+        <Route 
+          path="/forgot-password" 
+          element={user ? <Navigate to="/" replace /> : <ForgotPassword />} 
+        />
+
+        {/* Protected Routes */}
         <Route
           path="/"
-          element={
-            user ? <MobileLayout /> : <Navigate to="/login" replace />
-          }
+          element={user ? <MobileLayout /> : <Navigate to="/login" replace />}
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />

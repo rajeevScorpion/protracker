@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, CheckCircle2 } from 'lucide-react';
 import { useAuthState } from '../hooks/useAuthState';
-import { activityService } from '../services/activity.service';
-import { taskService } from '../services/task.service';
+import { collection, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import StatsCard from '../components/dashboard/StatsCard';
 import UpcomingTasks from '../components/dashboard/UpcomingTasks';
@@ -38,26 +38,55 @@ const Dashboard = () => {
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       try {
         setLoading(true);
         setError(null);
 
-        const tasks = await taskService.getTasks(user.uid);
+        // Fetch tasks
+        const tasksRef = collection(db, `users/${user.uid}/tasks`);
+        const tasksQuery = query(tasksRef, orderBy('createdAt', 'desc'));
+        const tasksSnapshot = await getDocs(tasksQuery);
+        const tasks = tasksSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          dueDate: doc.data().dueDate?.toDate?.() || new Date(doc.data().dueDate)
+        }));
+
         const completedTasks = tasks.filter(task => task.status === 'completed');
-        
         const pendingTasks = tasks
           .filter(task => task.status === 'pending')
-          .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+          .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
           .slice(0, 3);
 
-        const activities = await activityService.getActivities(user.uid, { limit: 3 });
+        // Fetch recent activities
+        const activitiesRef = collection(db, `users/${user.uid}/activities`);
+        const recentActivitiesQuery = query(
+          activitiesRef,
+          orderBy('date', 'desc'),
+          limit(3)
+        );
+        const activitiesSnapshot = await getDocs(recentActivitiesQuery);
+        const activities = activitiesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date?.toDate?.() || new Date(data.date),
+            startTime: data.startTime?.toDate?.() || new Date(data.startTime),
+            endTime: data.endTime?.toDate?.() || new Date(data.endTime)
+          };
+        });
 
+        // Calculate weekly activities
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         const weeklyActivitiesCount = activities.filter(
-          activity => new Date(activity.date) > oneWeekAgo
+          activity => activity.date > oneWeekAgo
         ).length;
 
         setStats({
@@ -79,10 +108,12 @@ const Dashboard = () => {
     loadDashboardData();
   }, [user]);
 
+  // Show loading state
   if (loading || statsLoading) {
     return <LoadingSpinner />;
   }
 
+  // Show error state if there's an error
   if (error || statsError) {
     return (
       <div className="max-w-3xl mx-auto py-6">
@@ -95,6 +126,20 @@ const Dashboard = () => {
     );
   }
 
+  // Show empty state if no user
+  if (!user) {
+    return (
+      <div className="max-w-3xl mx-auto py-6">
+        <div className="px-4">
+          <div className="text-center text-gray-500">
+            Please sign in to view your dashboard
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show dashboard content
   return (
     <div className="max-w-3xl mx-auto py-6">
       <div className="px-4 mb-6">
