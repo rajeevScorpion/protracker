@@ -121,7 +121,6 @@ const activities = [
 export const createDummyActivities = async (userId: string) => {
   try {
     const activitiesRef = collection(db, `users/${userId}/activities`);
-    
     for (const activity of activities) {
       const date = activity.date;
       const startTime = setHours(setMinutes(date, 0), 10); // Start at 10:00
