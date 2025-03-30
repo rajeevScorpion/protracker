@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Plus, X, Edit2, Tags } from 'lucide-react';
 import ConfirmationModal from '../modals/ConfirmationModal';
+import { settingsService } from "../../services/settings.service";
+import { auth } from "../../lib/firebase"; // Assuming you're using Firebase auth
+
 
 interface Category {
   id: string;
@@ -46,10 +49,29 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
     setCategoryToDelete(category);
   };
 
-  const handleConfirmDelete = () => {
+
+
+  
+  const handleConfirmDelete = async () => {
+  // const handleConfirmDelete = () => {
     if (categoryToDelete) {
-      onDelete(categoryToDelete.id);
-      setCategoryToDelete(null);
+       if (!auth.currentUser) {
+        alert("User not authenticated!");
+        return;
+      }
+      try {
+          const userId = auth.currentUser.uid;
+          const newCategory = await settingsService.deleteCategory(userId, "activity", categoryToDelete.id);
+          // alert(`Category Deleted Successfully: ${categoryToDelete.name}`);
+          window.location.reload();
+        } catch (error) {
+          console.error("Error Deleted Category:", error);
+          alert("Failed to delete category");
+        }
+      
+      // if (!user || !name.trim()) return;
+      // onDelete(categoryToDelete.id);
+      // setCategoryToDelete(null);
     }
   };
 

@@ -61,7 +61,8 @@ const Settings = () => {
       const userId = auth.currentUser.uid;
       const newCategory = await settingsService.addCategory(userId, "activity", category);
       
-      alert(`New Activity Category Added: ${newCategory.name}`);
+      // alert(`New Activity Category Added: ${newCategory.name}`);
+      window.location.reload();
     } catch (error) {
       console.error("Error adding activity category:", error);
       alert("Failed to add activity category");
