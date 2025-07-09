@@ -26,6 +26,7 @@ const ActivityHistory = () => {
     setDeleteActivityId
   } = useActivitySearch(user);
 
+  // Render loading state after all hooks are called
   if (loading) {
     return <LoadingSpinner />;
   }

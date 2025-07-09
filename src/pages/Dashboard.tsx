@@ -28,6 +28,7 @@ const Dashboard = () => {
   const [upcomingTasks, setUpcomingTasks] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   
+  // Always call useActivityStats hook - never conditionally
   const { 
     categoryStats, 
     loading: statsLoading, 

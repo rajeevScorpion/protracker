@@ -1,87 +1,126 @@
-import { useState, useEffect, useMemo } from 'react';
-import { User } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { activityService } from '../services/activity.service';
+import { startOfDay, endOfDay } from 'date-fns';
 
-export const useActivitySearch = (user: User | null) => {
-  const [allActivities, setAllActivities] = useState<any[]>([]);
+interface Activity {
+  id: string;
+  title: string;
+  category: string;
+  startTime: Date;
+  endTime: Date;
+  date: Date;
+  duration: number;
+  images: string[];
+  details?: string;
+}
+
+export const useActivitySearch = (user: any) => {
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null);
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: null,
-    end: null
-  });
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [perPage, setPerPage] = useState(10);
+  const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      loadActivities();
-    }
-  }, [user]);
+    const fetchActivities = async () => {
+      // Don't return early - always set loading to false
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-  const loadActivities = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      const fetchedActivities = await activityService.getActivities(user.uid);
-      setAllActivities(fetchedActivities);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to load activities:', err);
-      setError('Failed to load activities');
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+        setError(null);
 
-  const filteredActivities = useMemo(() => {
-    let filtered = [...allActivities];
+        const activitiesRef = collection(db, `users/${user.uid}/activities`);
+        let q = query(activitiesRef, orderBy('date', 'desc'));
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(activity => 
-        activity.title.toLowerCase().includes(query) ||
-        activity.details?.toLowerCase().includes(query)
-      );
-    }
+        // Apply date range filter if specified
+        if (dateRange.start && dateRange.end) {
+          const startDate = startOfDay(new Date(dateRange.start));
+          const endDate = endOfDay(new Date(dateRange.end));
+          q = query(
+            activitiesRef,
+            where('date', '>=', Timestamp.fromDate(startDate)),
+            where('date', '<=', Timestamp.fromDate(endDate)),
+            orderBy('date', 'desc')
+          );
+        }
 
-    if (selectedCategory) {
-      filtered = filtered.filter(activity => activity.category === selectedCategory);
-    }
+        const snapshot = await getDocs(q);
+        let fetchedActivities = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            category: data.category,
+            startTime: data.startTime.toDate(),
+            endTime: data.endTime.toDate(),
+            date: data.date.toDate(),
+            duration: data.duration,
+            images: data.images || [],
+            details: data.details || ''
+          };
+        });
 
-    if (dateRange.start && dateRange.end) {
-      filtered = filtered.filter(activity => {
-        const activityDate = new Date(activity.date);
-        return activityDate >= dateRange.start! && activityDate <= dateRange.end!;
-      });
-    }
+        // Apply client-side filters
+        if (searchQuery) {
+          fetchedActivities = fetchedActivities.filter(activity =>
+            activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            activity.category.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
 
-    return filtered.slice(0, perPage);
-  }, [allActivities, searchQuery, selectedCategory, dateRange, perPage]);
+        if (selectedCategory) {
+          fetchedActivities = fetchedActivities.filter(activity =>
+            activity.category === selectedCategory
+          );
+        }
 
-  const handleDelete = async (activityId: string) => {
-    setDeleteActivityId(activityId);
+        // Apply pagination
+        fetchedActivities = fetchedActivities.slice(0, perPage);
+
+        console.log('Filtered activities:', fetchedActivities);
+        console.log('Total duration for filtered activities:', 
+          fetchedActivities.reduce((sum, activity) => sum + activity.duration, 0), 'minutes');
+
+        setActivities(fetchedActivities);
+      } catch (err) {
+        console.error('Error fetching activities:', err);
+        setError('Failed to load activities');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, [user, searchQuery, selectedCategory, dateRange, perPage]);
+
+  const handleDelete = async (id: string) => {
+    setDeleteActivityId(id);
   };
 
   const confirmDelete = async () => {
     if (!deleteActivityId || !user) return;
-    
+
     try {
       await activityService.deleteActivity(user.uid, deleteActivityId);
-      setAllActivities(prev => prev.filter(activity => activity.id !== deleteActivityId));
+      setActivities(prev => prev.filter(activity => activity.id !== deleteActivityId));
       setDeleteActivityId(null);
-    } catch (err) {
-      console.error('Failed to delete activity:', err);
+    } catch (error) {
+      console.error('Error deleting activity:', error);
       setError('Failed to delete activity');
     }
   };
 
   return {
-    activities: filteredActivities,
+    activities,
     loading,
     error,
     searchQuery,
@@ -95,7 +134,6 @@ export const useActivitySearch = (user: User | null) => {
     setPerPage,
     handleDelete,
     confirmDelete,
-    setDeleteActivityId,
-    refresh: loadActivities
+    setDeleteActivityId
   };
 };

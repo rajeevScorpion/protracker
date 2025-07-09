@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Clock, Trash2, Download, Image, ChevronDown, ChevronRight } from 'lucide-react';
+import { Clock, Trash2, Download, Image, ChevronDown, ChevronRight, Calendar } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ActivityCardProps {
@@ -10,6 +10,7 @@ interface ActivityCardProps {
     category: string;
     startTime: Date;
     endTime: Date;
+    date: Date;
     duration: number;
     images: string[];
     details?: string;
@@ -50,7 +51,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
       <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
               <span className="inline-block px-3 py-1 text-sm bg-gray-100 rounded-full">
                 {activity.category}
               </span>
@@ -59,18 +60,18 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onDelete }) => {
               </span>
             </div>
             
-            <h3 className="mt-2 text-gray-900">
+            <h3 className="text-gray-900 font-medium mb-2">
               {activity.title}
             </h3>
             
-            <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>{format(activity.startTime, 'HH:mm')}</span>
+                <Calendar className="h-4 w-4" />
+                <span>{format(activity.date, 'MMM dd, yyyy')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                <span>{format(activity.endTime, 'HH:mm')}</span>
+                <span>{format(activity.startTime, 'HH:mm')} - {format(activity.endTime, 'HH:mm')}</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthState } from './useAuthState';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export const useCategories = (type: 'activity' | 'task') => {
@@ -68,11 +68,48 @@ export const useCategories = (type: 'activity' | 'task') => {
     }
   };
 
+  const updateCategory = async (id: string, name: string) => {
+    if (!user || !name.trim()) return;
+    
+    try {
+      const categoryRef = doc(db, 'categories', id);
+      await updateDoc(categoryRef, {
+        name: name.trim(),
+        updatedAt: new Date()
+      });
+      
+      setCategories(prev => 
+        prev.map(cat => 
+          cat.id === id ? { ...cat, name: name.trim() } : cat
+        )
+      );
+    } catch (err) {
+      console.error('Error updating category:', err);
+      throw err;
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const categoryRef = doc(db, 'categories', id);
+      await deleteDoc(categoryRef);
+      
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      throw err;
+    }
+  };
+
   return {
     categories,
     loading,
     error,
     addCategory,
+    updateCategory,
+    deleteCategory,
     refresh: loadCategories
   };
 };

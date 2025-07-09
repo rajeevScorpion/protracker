@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X, Edit2, Tags } from 'lucide-react';
 import ConfirmationModal from '../modals/ConfirmationModal';
-import { settingsService } from "../../services/settings.service";
-import { auth } from "../../lib/firebase"; // Assuming you're using Firebase auth
-
 
 interface Category {
   id: string;
@@ -13,9 +10,9 @@ interface Category {
 interface CategorySettingsProps {
   title: string;
   categories: Category[];
-  onAdd: (name: string) => void;
-  onUpdate: (id: string, name: string) => void;
-  onDelete: (id: string) => void;
+  onAdd: (name: string) => Promise<void>;
+  onUpdate: (id: string, name: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 const CategorySettings: React.FC<CategorySettingsProps> = ({
@@ -30,48 +27,56 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
   const [editingName, setEditingName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAdd = () => {
-    if (!newCategory.trim()) return;
-    onAdd(newCategory.trim());
-    setNewCategory('');
-    setIsAdding(false);
+  const handleAdd = async () => {
+    if (!newCategory.trim() || isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      await onAdd(newCategory.trim());
+      setNewCategory('');
+      setIsAdding(false);
+    } catch (error) {
+      console.error('Error adding category:', error);
+      alert('Failed to add category');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUpdate = (id: string) => {
-    if (!editingName.trim()) return;
-    onUpdate(id, editingName.trim());
-    setEditingId(null);
-    setEditingName('');
+  const handleUpdate = async (id: string) => {
+    if (!editingName.trim() || isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      await onUpdate(id, editingName.trim());
+      setEditingId(null);
+      setEditingName('');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert('Failed to update category');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteClick = (category: Category) => {
     setCategoryToDelete(category);
   };
 
-
-
-  
   const handleConfirmDelete = async () => {
-  // const handleConfirmDelete = () => {
-    if (categoryToDelete) {
-       if (!auth.currentUser) {
-        alert("User not authenticated!");
-        return;
-      }
-      try {
-          const userId = auth.currentUser.uid;
-          const newCategory = await settingsService.deleteCategory(userId, "activity", categoryToDelete.id);
-          // alert(`Category Deleted Successfully: ${categoryToDelete.name}`);
-          window.location.reload();
-        } catch (error) {
-          console.error("Error Deleted Category:", error);
-          alert("Failed to delete category");
-        }
-      
-      // if (!user || !name.trim()) return;
-      // onDelete(categoryToDelete.id);
-      // setCategoryToDelete(null);
+    if (!categoryToDelete || isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      await onDelete(categoryToDelete.id);
+      setCategoryToDelete(null);
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Failed to delete category');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,7 +86,8 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
         <h3 className="font-medium">{title}</h3>
         <button
           onClick={() => setIsAdding(true)}
-          className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+          disabled={isLoading}
+          className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
           Add New
@@ -100,20 +106,23 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
               }
             }}
             placeholder="Category name"
-            className="flex-1 px-3 py-2 border rounded-lg"
+            disabled={isLoading}
+            className="flex-1 px-3 py-2 border rounded-lg disabled:opacity-50"
           />
           <button
             onClick={handleAdd}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            disabled={isLoading || !newCategory.trim()}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            Add
+            {isLoading ? 'Adding...' : 'Add'}
           </button>
           <button
             onClick={() => {
               setIsAdding(false);
               setNewCategory('');
             }}
-            className="p-2 text-gray-400 hover:text-gray-600"
+            disabled={isLoading}
+            className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -137,17 +146,23 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
                       handleUpdate(category.id);
                     }
                   }}
-                  className="flex-1 px-3 py-2 border rounded-lg"
+                  disabled={isLoading}
+                  className="flex-1 px-3 py-2 border rounded-lg disabled:opacity-50"
                 />
                 <button
                   onClick={() => handleUpdate(category.id)}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  disabled={isLoading || !editingName.trim()}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Update
+                  {isLoading ? 'Updating...' : 'Update'}
                 </button>
                 <button
-                  onClick={() => setEditingId(null)}
-                  className="p-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditingName('');
+                  }}
+                  disabled={isLoading}
+                  className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -164,13 +179,15 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
                       setEditingId(category.id);
                       setEditingName(category.name);
                     }}
-                    className="p-2 text-blue-600 hover:text-blue-700"
+                    disabled={isLoading}
+                    className="p-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(category)}
-                    className="p-2 text-red-600 hover:text-red-700"
+                    disabled={isLoading}
+                    className="p-2 text-red-600 hover:text-red-700 disabled:opacity-50"
                   >
                     <X className="h-4 w-4" />
                   </button>

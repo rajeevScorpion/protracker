@@ -7,7 +7,6 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useCategories } from '../hooks/useCategories';
 import { createDummyActivities } from '../utils/createDummyActivities';
 
-
 import { settingsService } from "../services/settings.service";
 import { auth } from "../lib/firebase"; // Assuming you're using Firebase auth
 
@@ -28,12 +27,10 @@ const Settings = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCreatingDummy, setIsCreatingDummy] = useState(false);
 
-  
-  
   const {
     categories: activityCategories,
     loading: loadingActivityCategories,
-    // addCategory: addActivityCategory,
+    addCategory: addActivityCategory,   // UNCOMMENTED THIS LINE
     updateCategory: updateActivityCategory,
     deleteCategory: deleteActivityCategory
   } = useCategories('activity');
@@ -45,31 +42,6 @@ const Settings = () => {
     updateCategory: updateTaskCategory,
     deleteCategory: deleteTaskCategory
   } = useCategories('task');
-  
-  // const addActivityCategory = async (category) => {
-  //   alert(`New Activity Category: ${category}`);
-  // }
-
-
-  const addActivityCategory = async (category: string) => {
-    if (!auth.currentUser) {
-      alert("User not authenticated!");
-      return;
-    }
-
-    try {
-      const userId = auth.currentUser.uid;
-      const newCategory = await settingsService.addCategory(userId, "activity", category);
-      
-      // alert(`New Activity Category Added: ${newCategory.name}`);
-      window.location.reload();
-    } catch (error) {
-      console.error("Error adding activity category:", error);
-      alert("Failed to add activity category");
-    }
-  };
-
-
   
   const handleCreateDummyData = async () => {
     if (!user) return;
@@ -108,7 +80,7 @@ const Settings = () => {
           <CategorySettings
             title="Activity Categories"
             categories={activityCategories}
-            onAdd={(newCategory) => addActivityCategory(newCategory)}
+            onAdd={addActivityCategory}   // UPDATED TO USE HOOK'S ADDCATEGORY
             onUpdate={updateActivityCategory}
             onDelete={deleteActivityCategory}
           />
