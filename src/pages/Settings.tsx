@@ -33,7 +33,7 @@ const Settings = () => {
   const {
     categories: activityCategories,
     loading: loadingActivityCategories,
-    // addCategory: addActivityCategory,
+    addCategory: addActivityCategory, // Use directly from hook
     updateCategory: updateActivityCategory,
     deleteCategory: deleteActivityCategory
   } = useCategories('activity');
@@ -41,35 +41,10 @@ const Settings = () => {
   const {
     categories: taskCategories,
     loading: loadingTaskCategories,
-    addCategory: addTaskCategory,
+    addCategory: addTaskCategory, // Already using from hook
     updateCategory: updateTaskCategory,
     deleteCategory: deleteTaskCategory
   } = useCategories('task');
-  
-  // const addActivityCategory = async (category) => {
-  //   alert(`New Activity Category: ${category}`);
-  // }
-
-
-  const addActivityCategory = async (category: string) => {
-    if (!auth.currentUser) {
-      alert("User not authenticated!");
-      return;
-    }
-
-    try {
-      const userId = auth.currentUser.uid;
-      const newCategory = await settingsService.addCategory(userId, "activity", category);
-      
-      // alert(`New Activity Category Added: ${newCategory.name}`);
-      window.location.reload();
-    } catch (error) {
-      console.error("Error adding activity category:", error);
-      alert("Failed to add activity category");
-    }
-  };
-
-
   
   const handleCreateDummyData = async () => {
     if (!user) return;
