@@ -52,26 +52,10 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({
 
 
   
-  const handleConfirmDelete = async () => {
-  // const handleConfirmDelete = () => {
+  const handleConfirmDelete = () => {
     if (categoryToDelete) {
-       if (!auth.currentUser) {
-        alert("User not authenticated!");
-        return;
-      }
-      try {
-          const userId = auth.currentUser.uid;
-          const newCategory = await settingsService.deleteCategory(userId, "activity", categoryToDelete.id);
-          // alert(`Category Deleted Successfully: ${categoryToDelete.name}`);
-          window.location.reload();
-        } catch (error) {
-          console.error("Error Deleted Category:", error);
-          alert("Failed to delete category");
-        }
-      
-      // if (!user || !name.trim()) return;
-      // onDelete(categoryToDelete.id);
-      // setCategoryToDelete(null);
+      onDelete(categoryToDelete.id);
+      setCategoryToDelete(null);
     }
   };
 
